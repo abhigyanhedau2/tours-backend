@@ -8,7 +8,8 @@ const userSchema = new Schema({
     },
     email: {
         type: String,
-        required: true, unique: true
+        required: true,
+        unique: true
     },
     password: {
         type: String,
@@ -30,8 +31,13 @@ const userSchema = new Schema({
         type: String,
         required: true
     },
+    role: {
+        type: String,
+        required: true,
+        enum: ['admin', 'guide', 'customer']
+    },
     toursBooked: {
-        type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tour' }],
+        type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Booking' }],
         default: [],
     }
 });
