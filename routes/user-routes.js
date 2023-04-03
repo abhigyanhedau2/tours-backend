@@ -7,7 +7,7 @@ const userControllers = require('./../controllers/user-controller');
 
 const router = express.Router();
 
-const { sendToken, verifySignUpToken, signup, login, sendRecoveryMail, resetPassword, getAllUsers, getAllGuides, getMe, updateMe, deleteMe, getAGuide, postAGuide, updateAGuide, deleteAGuide } = userControllers;
+const { sendToken, verifySignUpToken, signup, login, sendRecoveryMail, resetPassword, getAllUsers, getAllCustomers, getAllGuides, getMe, updateMe, deleteMe, getAGuide, postAGuide, updateAGuide, deleteAGuide } = userControllers;
 
 router.route('/sendToken').post(sendToken);
 
@@ -25,17 +25,21 @@ router.use(protect);
 
 router.route('/me')
     .get(getMe)
-    .patch(updateMe)
+    .patch(upload.single('image'), updateMe)
     .delete(deleteMe);
 
-router.route('/users').get(restrictTo('admin'), getAllUsers);
+router.use(restrictTo('admin'));
 
-router.route('/guides').get(restrictTo('admin'), getAllGuides);
+router.route('/allusers').get(getAllUsers);
+
+router.route('/allcustomers').get(getAllCustomers);
+
+router.route('/allguides').get(getAllGuides);
 
 router.route('/guide')
-    .get(restrictTo('admin'), getAGuide)
-    .post(restrictTo('admin'), postAGuide)
-    .patch(restrictTo('admin'), updateAGuide)
-    .delete(restrictTo('admin'), deleteAGuide);
+    .get(getAGuide)
+    .post(upload.single('image'), postAGuide)
+    .patch(upload.single('image'), updateAGuide)
+    .delete(deleteAGuide);
 
 module.exports = router;

@@ -4,9 +4,9 @@ const AppError = require('./appError');
 
 module.exports = multer({
     storage: multer.diskStorage({}),
-    fileFilter: (req, res, cb) => {
-        let extension = path.extname(file.originalname);
-        if (extension !== ".jpg" && extension !== ".png" && extension !== ".jpeg") {
+    fileFilter: (req, file, cb) => {
+        let ext = path.extname(file.originalname);
+        if (ext !== ".jpg" && ext !== ".jpeg" && ext !== ".png") {
             cb(new AppError(400, "Invalid image extension"), false);
             return;
         }

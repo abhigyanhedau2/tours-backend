@@ -177,7 +177,9 @@ const signup = catchAsync(async (req, res, next) => {
 
 const login = catchAsync(async (req, res, next) => {
 
-    const { email, password } = req.body;
+    let { email, password } = req.body;
+
+    password = password.toString();
 
     if (!validateEmail(email) || !validatePassword(password))
         return next(new AppError(400, 'Invalid email or password.'));
@@ -232,7 +234,7 @@ const sendRecoveryMail = catchAsync(async (req, res, next) => {
 
     const message = `Hey ${user.name}, \n\nForgot your password?\nWe received a request to reset the password for your WanderLyst Tours Account.\n\nTo reset your password, enter the following token at the forgot password page - ${resetToken}\n\nHave a nice day!\n\nRegards,\nWanderLyst Tours \n\nA Project By: \nAbhigyan Hedau\nMrunali Gadekar\nShreyash Chaple\nHimanshu Akula`;
 
-    await User.updateOne({ email: userMail }, { token: hashedToken });
+    await User.updateOne({ email: email }, { token: hashedToken });
 
     const mailOptions = {
         from: process.env.USER_MAIL,
@@ -241,6 +243,14 @@ const sendRecoveryMail = catchAsync(async (req, res, next) => {
         subject: 'Account Recovery Mail',
         text: message
     };
+
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.USER_MAIL,
+            pass: process.env.USER_PASS
+        }
+    });
 
     transporter.sendMail(mailOptions, function (error) {
         if (error)
@@ -309,6 +319,19 @@ const getAllUsers = catchAsync(async (req, res, next) => {
 });
 
 
+const getAllCustomers = catchAsync(async (req, res, next) => {
+    const users = await User.find({ role: 'customer' });
+
+    res.status(200).json({
+        status: 'success',
+        results: users.length,
+        data: {
+            users
+        }
+    });
+});
+
+
 const getAllGuides = catchAsync(async (req, res, next) => {
     const users = await User.find({ role: 'guide' });
 
@@ -325,7 +348,7 @@ const getAllGuides = catchAsync(async (req, res, next) => {
 const getMe = catchAsync(async (req, res, next) => {
 
     const userId = req.user.id;
-    const user = await findById(userId);
+    const user = await User.findById(userId);
 
     if (!user)
         return next(new AppError(404, 'No user found.'));
@@ -341,13 +364,13 @@ const getMe = catchAsync(async (req, res, next) => {
 
 const updateMe = catchAsync(async (req, res, next) => {
 
-    const { name, address, number, age } = req.body;
+    const { name, email, address, number, age } = req.body;
     const userId = req.user._id;
 
     // Fetch the user from DB
-    const user = await User.findOne({ email: userEmail });
+    const user = await User.findOne({ email: req.user.email });
 
-    if (name === undefined && address === undefined && number === undefined && age === undefined) return next(new AppError(400, 'Provide some data for updation.'));
+    if (name === undefined && address === undefined && number === undefined && age === undefined && req.file === undefined) return next(new AppError(400, 'Provide some data for updation.'));
 
     if (name !== undefined && !validateString(name))
         return next(new AppError(400, 'Please enter a valid name for updation'));
@@ -412,7 +435,7 @@ const getAGuide = catchAsync(async (req, res, next) => {
     if (!guide || guide.role !== 'guide')
         return next(new AppError(404, 'No guide found.'));
 
-    res.send(200).json({
+    res.status(200).json({
         status: 'success',
         data: {
             guide
@@ -555,4 +578,4 @@ const updateAGuide = catchAsync(async (req, res, next) => {
 
 });
 
-module.exports = { sendToken, verifySignUpToken, signup, login, sendRecoveryMail, resetPassword, getAllUsers, getAllGuides, getMe, updateMe, deleteMe, getAGuide, postAGuide, deleteAGuide, updateAGuide };
+module.exports = { sendToken, verifySignUpToken, signup, login, sendRecoveryMail, resetPassword, getAllUsers, getAllCustomers, getAllGuides, getMe, updateMe, deleteMe, getAGuide, postAGuide, deleteAGuide, updateAGuide };

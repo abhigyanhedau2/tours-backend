@@ -29,7 +29,7 @@ const globalErrorHandler = (err, req, res, next) => {
 
     // If the error is operational, it means that if we introduced it
     if (err.isOperational) {
-        console.log(err);
+        // console.log(err);
         return res.status(err.statusCode).json({
             status: err.status,
             message: err.message,
