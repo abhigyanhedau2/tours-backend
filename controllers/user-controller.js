@@ -364,7 +364,7 @@ const getMe = catchAsync(async (req, res, next) => {
 
 const updateMe = catchAsync(async (req, res, next) => {
 
-    const { name, email, address, number, age } = req.body;
+    const { name, address, number, age } = req.body;
     const userId = req.user._id;
 
     // Fetch the user from DB
