@@ -5,6 +5,7 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 
 const userRouter = require('./routes/user-routes');
+const queryRouter = require('./routes/query-routes');
 
 const globalErrorHandler = require('./utils/globalErrorHandler');
 
@@ -29,6 +30,7 @@ app.use(function (req, res, next) {
 });
 
 app.use('/api/v1/users', userRouter);
+app.use('/api/v1/query', queryRouter);
 
 app.use(globalErrorHandler);
 
