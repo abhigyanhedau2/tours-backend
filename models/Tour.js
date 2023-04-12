@@ -51,11 +51,15 @@ const tourSchema = new Schema({
         type: Number,
         required: true
     },
-    guideIds: {
+    rating: {
+        type: Number,
+        required: true
+    },
+    guides: {
         type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Guide' }],
         default: [],
     },
-    reviewIds: {
+    reviews: {
         type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Review' }],
         default: [],
     }
