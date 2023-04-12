@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
+// # MONGODB_URI=mongodb://localhost:27017/wanderlyst
+
 const reviewSchema = new Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     tourId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tour' },
