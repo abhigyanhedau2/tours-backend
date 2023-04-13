@@ -30,6 +30,14 @@ app.use(function (req, res, next) {
     next();
 });
 
+// route to test the server
+app.get('/', (req, res) => {
+    res.status(200).json({
+        status: 'success',
+        message: 'server returned with status code 200 for version 1.0.0'
+    });
+});
+
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/query', queryRouter);
 app.use('/api/v1/reviews', reviewRouter);
