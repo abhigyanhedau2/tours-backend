@@ -9,6 +9,7 @@ const queryRouter = require('./routes/query-routes');
 const reviewRouter = require('./routes/review-routes');
 
 const globalErrorHandler = require('./utils/globalErrorHandler');
+const catchAsync = require('./utils/catchAsync');
 
 // Load environment variables
 dotenv.config();
@@ -31,16 +32,16 @@ app.use(function (req, res, next) {
 });
 
 // route to test the server
-app.get('/', (req, res) => {
-    res.status(200).json({
+app.get('/', catchAsync((req, res) => {
+    return res.status(200).json({
         status: 'success',
         message: 'server returned with status code 200 for version 1.0.0'
     });
-});
+}));
 
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/query', queryRouter);
-app.use('/api/v1/reviews', reviewRouter);
+app.use('/api/v1/review', reviewRouter);
 
 app.use(globalErrorHandler);
 
