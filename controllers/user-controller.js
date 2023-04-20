@@ -127,7 +127,7 @@ const signup = catchAsync(async (req, res, next) => {
     if (existingUser)
         return next(new AppError(400, "User already exists. Try loggin in."));
 
-    let images = "https://res.cloudinary.com/ds4l1uae7/image/upload/v1680358997/defaultProfile_akmzpv_fu84yx.jpg";
+    let imageLink = "https://res.cloudinary.com/ds4l1uae7/image/upload/v1680358997/defaultProfile_akmzpv_fu84yx.jpg";
     let imagePublicId = null;
 
     if (req.file) {
