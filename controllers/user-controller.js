@@ -61,7 +61,7 @@ const sendToken = catchAsync(async (req, res, next) => {
         return next(new AppError(500, `Error Sending Mail - ${err}`))
     });
 
-    res.status(200).json({
+    return res.status(200).json({
         status: 'success'
     });
 });
@@ -88,7 +88,7 @@ const verifySignUpToken = catchAsync(async (req, res, next) => {
 
     await UserToken.updateOne({ email: email }, { verified: true });
 
-    res.status(200).json({
+    return res.status(200).json({
         status: 'success'
     });
 });
@@ -109,7 +109,7 @@ const signup = catchAsync(async (req, res, next) => {
     if (!validateString(name))
         return next(new AppError(400, "Enter a valid name."));
 
-    if (!validatePassword(password.toString()))
+    if (!validatePassword(password))
         return next(new AppError(400, "Enter a valid password of more than 6 characters."));
 
     if (!validateString(address))
@@ -127,7 +127,7 @@ const signup = catchAsync(async (req, res, next) => {
     if (existingUser)
         return next(new AppError(400, "User already exists. Try loggin in."));
 
-    let imageLink = "https://res.cloudinary.com/ds4l1uae7/image/upload/v1680358997/defaultProfile_akmzpv_fu84yx.jpg";
+    let images = "https://res.cloudinary.com/ds4l1uae7/image/upload/v1680358997/defaultProfile_akmzpv_fu84yx.jpg";
     let imagePublicId = null;
 
     if (req.file) {
@@ -157,7 +157,7 @@ const signup = catchAsync(async (req, res, next) => {
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: process.env.TOKEN_EXPIRES_IN });
 
     // send back user data
-    res.status(201).json({
+    return res.status(201).json({
         status: 'success',
         data: {
             user: {
@@ -197,7 +197,7 @@ const login = catchAsync(async (req, res, next) => {
     // Create JWT token and sign it
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: process.env.TOKEN_EXPIRES_IN });
 
-    res.status(200).json({
+    return res.status(200).json({
         status: 'success',
         data: {
             user: {
@@ -257,7 +257,7 @@ const sendRecoveryMail = catchAsync(async (req, res, next) => {
             return next(new AppError(500, 'Internal server error'));
     });
 
-    res.status(200).json({
+    return res.status(200).json({
         status: 'success'
     });
 });
@@ -295,7 +295,7 @@ const resetPassword = catchAsync(async (req, res, next) => {
     // Create JWT token and sign it
     const jwtToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: process.env.TOKEN_EXPIRES_IN });
 
-    res.status(201).json({
+    return res.status(201).json({
         status: 'success',
         data: {
             user: updatedUser,
@@ -309,7 +309,7 @@ const getAllUsers = catchAsync(async (req, res, next) => {
 
     const users = await User.find();
 
-    res.status(200).json({
+    return res.status(200).json({
         status: 'success',
         results: users.length,
         data: {
@@ -322,7 +322,7 @@ const getAllUsers = catchAsync(async (req, res, next) => {
 const getAllCustomers = catchAsync(async (req, res, next) => {
     const users = await User.find({ role: 'customer' });
 
-    res.status(200).json({
+    return res.status(200).json({
         status: 'success',
         results: users.length,
         data: {
@@ -335,7 +335,7 @@ const getAllCustomers = catchAsync(async (req, res, next) => {
 const getAllGuides = catchAsync(async (req, res, next) => {
     const users = await User.find({ role: 'guide' });
 
-    res.status(200).json({
+    return res.status(200).json({
         status: 'success',
         results: users.length,
         data: {
@@ -353,7 +353,7 @@ const getMe = catchAsync(async (req, res, next) => {
     if (!user)
         return next(new AppError(404, 'No user found.'));
 
-    res.status(200).json({
+    return res.status(200).json({
         status: 'success',
         data: {
             user
@@ -398,7 +398,7 @@ const updateMe = catchAsync(async (req, res, next) => {
     // Update the user
     const updatedUser = await User.findByIdAndUpdate(userId, { name, address, phoneNumber: number, image: imageLink, imagePublicId, age: age }, { new: true });
 
-    res.status(200).json({
+    return res.status(200).json({
         status: 'success',
         data: {
             user: updatedUser
@@ -418,7 +418,7 @@ const deleteMe = catchAsync(async (req, res, next) => {
 
     await User.deleteOne({ email: user.email });
 
-    res.status(204).json({
+    return res.status(204).json({
         status: 'success',
         data: null
     });
@@ -435,7 +435,7 @@ const getAGuide = catchAsync(async (req, res, next) => {
     if (!guide || guide.role !== 'guide')
         return next(new AppError(404, 'No guide found.'));
 
-    res.status(200).json({
+    return res.status(200).json({
         status: 'success',
         data: {
             guide
@@ -502,7 +502,7 @@ const postAGuide = catchAsync(async (req, res, next) => {
         salary
     });
 
-    res.status(201).json({
+    return res.status(201).json({
         status: 'success',
         data: {
             user: {
@@ -569,7 +569,7 @@ const updateAGuide = catchAsync(async (req, res, next) => {
     // Update the user
     const updatedUser = await User.findByIdAndUpdate(id, { name, address, phoneNumber: number, image: imageLink, imagePublicId, age: age, salary }, { new: true });
 
-    res.status(200).json({
+    return res.status(200).json({
         status: 'success',
         data: {
             user: updatedUser
@@ -578,4 +578,79 @@ const updateAGuide = catchAsync(async (req, res, next) => {
 
 });
 
-module.exports = { sendToken, verifySignUpToken, signup, login, sendRecoveryMail, resetPassword, getAllUsers, getAllCustomers, getAllGuides, getMe, updateMe, deleteMe, getAGuide, postAGuide, deleteAGuide, updateAGuide };
+const addAdmin = catchAsync(async (req, res, next) => {
+    // Fetching the values from req.body
+    const { name, email, password, address, number, salary, age } = req.body;
+
+    if (!validateString(name))
+        return next(new AppError(400, 'Enter a valid name'));
+
+    if (!validateEmail(email))
+        return next(new AppError(400, 'Enter a valid email'));
+
+    if (!validatePassword(password))
+        return next(new AppError(400, 'Enter a valid password of more than 6 characters'));
+
+    if (!validateString(address))
+        return next(new AppError(400, 'Enter a valid address'));
+
+    if (!validatePhoneNumber(number))
+        return next(new AppError(400, 'Enter a valid numeber of 10 digits'));
+
+    if (!validateAge(age))
+        return next(new AppError(400, 'Enter a valid age'));
+
+    if (!validateAge(salary))
+        return next(new AppError(400, 'Enter a valid salary'));
+
+    // Check if a user with the email exists previously
+    const existingUser = await User.findOne({ email });
+
+    // If the user already exists with the email, return an error
+    if (existingUser)
+        return next(new AppError(400, 'User with email ' + email + ' already exists.'));
+
+    let imageLink = "https://res.cloudinary.com/dviyqhmkb/image/upload/v1674681062/defaultProfile_akmzpv.webp";
+    let imagePublicId = null;
+
+    if (req.file) {
+        const result = await cloudinary.uploader.upload(req.file.path);
+        imagePublicId = result.public_id;
+        imageLink = result.secure_url;
+    }
+
+    // Hash the password before storing in DB
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    const newAdmin = await User.create({
+        name,
+        email,
+        password: hashedPassword,
+        image: imageLink,
+        imagePublicId,
+        address,
+        phoneNumber: number,
+        age,
+        role: 'admin',
+        salary
+    });
+
+    return res.status(201).json({
+        status: 'success',
+        data: {
+            user: {
+                name,
+                email,
+                image: imageLink,
+                imagePublicId,
+                address,
+                phoneNumber: number,
+                age,
+                role: 'admin',
+                salary
+            }
+        }
+    });
+});
+
+module.exports = { sendToken, verifySignUpToken, signup, login, sendRecoveryMail, resetPassword, getAllUsers, getAllCustomers, getAllGuides, getMe, updateMe, deleteMe, getAGuide, postAGuide, deleteAGuide, updateAGuide, addAdmin };
