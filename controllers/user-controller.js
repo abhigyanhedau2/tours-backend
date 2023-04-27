@@ -320,26 +320,26 @@ const getAllUsers = catchAsync(async (req, res, next) => {
 
 
 const getAllCustomers = catchAsync(async (req, res, next) => {
-    const users = await User.find({ role: 'customer' });
+    const customers = await User.find({ role: 'customer' });
 
     return res.status(200).json({
         status: 'success',
-        results: users.length,
+        results: customers.length,
         data: {
-            users
+            customers
         }
     });
 });
 
 
 const getAllGuides = catchAsync(async (req, res, next) => {
-    const users = await User.find({ role: 'guide' });
+    const guides = await User.find({ role: 'guide' });
 
     return res.status(200).json({
         status: 'success',
-        results: users.length,
+        results: guides.length,
         data: {
-            users
+            guides
         }
     });
 });
@@ -348,6 +348,10 @@ const getAllGuides = catchAsync(async (req, res, next) => {
 const getMe = catchAsync(async (req, res, next) => {
 
     const userId = req.user.id;
+
+    if (!userId || userId.toString().length !== 24)
+        return next(new AppError(404, 'No user found.'));
+
     const user = await User.findById(userId);
 
     if (!user)
@@ -430,6 +434,9 @@ const getAGuide = catchAsync(async (req, res, next) => {
 
     const guideId = req.body.guideId;
 
+    if (!guideId || guideId.toString().length !== 24)
+        return next(new AppError(404, 'No user found.'));
+
     const guide = await User.findById(guideId);
 
     if (!guide || guide.role !== 'guide')
@@ -506,6 +513,7 @@ const postAGuide = catchAsync(async (req, res, next) => {
         status: 'success',
         data: {
             user: {
+                id: newGuide.id,
                 name,
                 email,
                 image: imageLink,
@@ -524,14 +532,14 @@ const postAGuide = catchAsync(async (req, res, next) => {
 
 const deleteAGuide = catchAsync(async (req, res, next) => {
     const id = req.body.id;
-
+    if (!id || id.toString().length !== 24) return next(new AppError(400, 'No guide found.'));
     await User.findByIdAndDelete(id);
 });
 
 
 const updateAGuide = catchAsync(async (req, res, next) => {
     const { id, name, address, number, age, salary } = req.body;
-
+    if (!id || id.toString().length !== 24) return next(new AppError(400, 'No guide found.'));
     if (name === undefined && address === undefined && number === undefined && age === undefined && salary === undefined) return next(new AppError(400, 'Provide some data for updation.'));
 
     if (name !== undefined && !validateString(name))

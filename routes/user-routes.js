@@ -7,7 +7,7 @@ const userControllers = require('./../controllers/user-controller');
 
 const router = express.Router();
 
-const { sendToken, verifySignUpToken, signup, login, sendRecoveryMail, resetPassword, getAllUsers, getAllCustomers, getAllGuides, getMe, updateMe, deleteMe, getAGuide, postAGuide, updateAGuide, deleteAGuide } = userControllers;
+const { sendToken, verifySignUpToken, signup, login, sendRecoveryMail, resetPassword, getAllUsers, getAllCustomers, getAllGuides, getMe, updateMe, deleteMe, getAGuide, postAGuide, updateAGuide, deleteAGuide, addAdmin } = userControllers;
 
 router.route('/sendToken').post(sendToken);
 
@@ -35,6 +35,8 @@ router.route('/allusers').get(getAllUsers);
 router.route('/allcustomers').get(getAllCustomers);
 
 router.route('/allguides').get(getAllGuides);
+
+router.route('/addAdmin').post(upload.single('image'), addAdmin);
 
 router.route('/guide')
     .get(getAGuide)

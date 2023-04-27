@@ -7,7 +7,7 @@ const cors = require('cors');
 const userRouter = require('./routes/user-routes');
 const queryRouter = require('./routes/query-routes');
 const reviewRouter = require('./routes/review-routes');
-// const tourRouter = require('./routes/tour-routes');
+const tourRouter = require('./routes/tour-routes');
 
 const globalErrorHandler = require('./utils/globalErrorHandler');
 const catchAsync = require('./utils/catchAsync');
@@ -43,7 +43,7 @@ app.get('/', catchAsync((req, res) => {
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/query', queryRouter);
 app.use('/api/v1/review', reviewRouter);
-// app.use('/api/v1/tours', tourRouter);
+app.use('/api/v1/tours', tourRouter);
 
 app.use(globalErrorHandler);
 

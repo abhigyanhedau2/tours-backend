@@ -1,6 +1,8 @@
 const catchAsync = require('./../utils/catchAsync');
 const Review = require('./../models/Review');
 const Tour = require('../models/Tour');
+const validateRating = require('./../utils/validateRating');
+const validateString = require('./../utils/validateString');
 
 const getAllReviews = catchAsync(async (req, res, next) => {
     const allReviews = await Review.find();
@@ -34,7 +36,9 @@ const postReview = catchAsync(async (req, res, next) => {
         return next(new AppError(404, 'No tour found.'));
     if (review === undefined || rating === undefined)
         return next(new AppError(400, 'Add complete review and rating.'));
-    if (rating < 1 || rating > 5)
+    if (!validateString(review))
+        return next(new AppError(400, 'Please specify a review.'));
+    if (!validateRating(rating))
         return next(new AppError(400, 'Rating must be between 1 and 5.'));
     const tour = await Tour.findById(tourId);
     if (!tour)
@@ -45,7 +49,7 @@ const postReview = catchAsync(async (req, res, next) => {
         review,
         rating
     });
-    const updatedRating = (tour.rating + rating) / tour.reviews.length + 1;
+    const updatedRating = ((tour.rating * tour.reviews.length) + rating) / (tour.reviews.length + 1);
     const updatedReviews = tour.reviews;
     updatedReviews.push(newReview.id);
     await Tour.updateById(tourId, { rating: updatedRating, reviews: updatedReviews });
@@ -67,7 +71,9 @@ const updateReview = catchAsync(async (req, res, next) => {
         return next(new AppError(400, 'Add complete review and rating to update.'));
     if (reviewId === undefined)
         return next(new AppError(404, 'No review found.'));
-    if (rating < 1 || rating > 5)
+    if (!validateString(review))
+        return next(new AppError(400, 'Please specify a review.'));
+    if (!validateRating(rating))
         return next(new AppError(400, 'Rating must be between 1 and 5.'));
     const tour = await Tour.findById(tourId);
     const toBeUpdatedReview = await Review.findById(reviewId);
@@ -87,6 +93,25 @@ const updateReview = catchAsync(async (req, res, next) => {
 });
 
 const deleteReview = catchAsync(async (req, res, next) => {
+    const { userId, tourId, reviewId } = req.body;
+    if (userId === undefined || userId !== req.user._id.toString())
+        return next(new AppError(403, 'Forbidden. Unauthorized access'));
+    if (tourId === undefined)
+        return next(new AppError(404, 'No tour found.'));
+    if (reviewId === undefined)
+        return next(new AppError(404, 'No review found.'));
+    const tour = await Tour.findById(tourId);
+    const toBeDeletedReview = await Review.findById(reviewId);
+    const rating = toBeDeletedReview.rating;
+    const reviews = tour.reviews;
+    const updatedReviews = reviews.filter(review => review.id !== reviewId);
+    const updatedRating = ((tour.rating * tour.reviews.length) - rating) / (tour.reviews.length - 1);
+    await Tour.findByIdAndUpdate(tourId, { reviews: updatedReviews, rating: updatedRating });
+    await Review.findByIdAndDelete(reviewId);
+    return res.status(204).json({
+        status: 'success',
+        message: 'Review was successfully deleted'
+    });
 });
 
 module.exports = { getAllReviews, getReview, postReview, updateReview, deleteReview };

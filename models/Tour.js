@@ -15,14 +15,22 @@ const tourSchema = new Schema({
         required: true,
         difficulty: ['easy', 'medium', 'hard']
     },
-    images: {
-        type: [{ type: String }],
-        default: [],
-    },
     dates: {
         type: [{
-            type: Date,
-            required: true
+            type: Date
+        }],
+        default: [],
+    },
+    images: {
+        type: [{
+            imageLink: {
+                type: String,
+                required: true
+            },
+            imagePublicId: {
+                type: String,
+                required: true
+            }
         }],
         default: [],
     },
@@ -53,10 +61,11 @@ const tourSchema = new Schema({
     },
     rating: {
         type: Number,
-        required: true
+        required: true,
+        default: 0
     },
     guides: {
-        type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Guide' }],
+        type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
         default: [],
     },
     reviews: {
