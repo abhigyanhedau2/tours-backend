@@ -1,117 +1,221 @@
 const catchAsync = require('./../utils/catchAsync');
-const Review = require('./../models/Review');
-const Tour = require('../models/Tour');
-const validateRating = require('./../utils/validateRating');
+const AppError = require('./../utils/appError');
+const mongoose = require('mongoose');
+
 const validateString = require('./../utils/validateString');
+const validateRating = require('./../utils/validateRating');
+
+const Review = require('./../models/Review');
+const Tour = require('./../models/Tour');
 
 const getAllReviews = catchAsync(async (req, res, next) => {
-    const allReviews = await Review.find();
+
+    const reviews = await Review.find().sort({ rating: 'desc' }).exec();
+
     return res.status(200).json({
         status: 'success',
-        results: allReviews.length,
-        data: {
-            reviews: allReviews
-        }
+        results: reviews.length,
+        reviews
     });
+
 });
+
+const getAllReviewsForTour = catchAsync(async (req, res, next) => {
+
+    const tourId = req.body.tourId;
+
+    if (tourId === undefined) return next(new AppError(400, 'Specify tour id'));
+    if (tourId.length !== 24) return next(new AppError(400, 'No tour found with id ' + tourId));
+
+    const reviews = await Review.find({ tourId }).sort({ rating: 'desc' }).exec();
+    const tour = await Tour.findById(tourId);
+
+    if (!tour) return next(new AppError(400, 'No tour found with id ' + tourId));
+
+    return res.status(200).json({
+        status: 'success',
+        results: reviews.length,
+        rating: tour.rating,
+        reviews
+    });
+
+});
+
 
 const getReview = catchAsync(async (req, res, next) => {
-    const reviewId = req.body.id;
+
+    const reviewId = req.body.reviewId;
+
+    if (reviewId === undefined) return next(new AppError(400, 'Specify review id'));
+    if (reviewId.length !== 24) return next(new AppError(400, 'No review found with id ' + reviewId));
+
     const review = await Review.findById(reviewId);
-    if (!review)
-        return next(new AppError(404, 'No review found'));
+
+    if (!review) return next(new AppError(400, 'No review found with id ' + reviewId));
+
     return res.status(200).json({
         status: 'success',
-        data: {
-            review
-        }
+        review
     });
+
 });
 
+
 const postReview = catchAsync(async (req, res, next) => {
-    const { userId, tourId, review, rating } = req.body;
-    if (userId === undefined || userId !== req.user._id.toString())
-        return next(new AppError(403, 'Forbidden. Unauthorized access'));
-    if (tourId === undefined)
-        return next(new AppError(404, 'No tour found.'));
-    if (review === undefined || rating === undefined)
-        return next(new AppError(400, 'Add complete review and rating.'));
-    if (!validateString(review))
-        return next(new AppError(400, 'Please specify a review.'));
-    if (!validateRating(rating))
-        return next(new AppError(400, 'Rating must be between 1 and 5.'));
+
+    const { tourId, review, rating } = req.body;
+    const userId = req.user.id;
+
+    if (tourId === undefined) return next(new AppError(400, 'Specify tour id'));
+    if (tourId.length !== 24) return next(new AppError(400, 'No tour found with id ' + tourId));
+
+    if (!validateString(review)) return next(new AppError(400, 'Empty review'));
+
+    if (!validateRating(rating)) return next(new AppError(400, 'Invalid rating. Must be a number and between 1 to 5'));
+
     const tour = await Tour.findById(tourId);
-    if (!tour)
-        return next(new AppError(404, 'No tour found.'));
+
+    if (!tour) return next(new AppError(400, 'No tour found with id ' + tourId));
+
+    const tourRating = tour.rating;
+    const numberOfRatings = tour.reviews.length;
+
+    
+    console.log(`((${tourRating} * ${numberOfRatings}) + ${rating})`);
+    console.log('___________________________');
+    console.log(`(${numberOfRatings} + 1)`);
+    
+    let updatedTourRating;
+    
+    if (numberOfRatings === 0) updatedTourRating = rating;
+    else {
+        updatedTourRating = (((tourRating * numberOfRatings) + rating) / (numberOfRatings + 1));
+        updatedTourRating = updatedTourRating.toFixed(2);
+    }
+    
     const newReview = await Review.create({
         userId,
         tourId,
         review,
         rating
     });
-    const updatedRating = ((tour.rating * tour.reviews.length) + rating) / (tour.reviews.length + 1);
-    const updatedReviews = tour.reviews;
-    updatedReviews.push(newReview.id);
-    await Tour.updateById(tourId, { rating: updatedRating, reviews: updatedReviews });
+    
+    const tourReviews = tour.reviews;
+
+    console.log({ 'Before Posting Review Number of Reviews Present': tourReviews.length, 'Before Posting Review Tour Reviews Array': tour.reviews });
+
+    tourReviews.push(newReview._id);
+    
+    console.log({ 'After Posting Review Number of Reviews Present': tourReviews.length, 'After Posting Review Tour Reviews Array': tour.reviews });
+
+    console.log('_________________________________________________________________________');
+
+    await Tour.findByIdAndUpdate(tourId, { reviews: tourReviews, rating: updatedTourRating });
+
     return res.status(201).json({
         status: 'success',
-        data: {
-            review: newReview
-        }
+        review: newReview
     });
+
 });
+
 
 const updateReview = catchAsync(async (req, res, next) => {
-    const { userId, tourId, reviewId, review, rating } = req.body;
-    if (userId === undefined || userId !== req.user._id.toString())
-        return next(new AppError(403, 'Forbidden. Unauthorized access'));
-    if (tourId === undefined)
-        return next(new AppError(404, 'No tour found.'));
-    if (review === undefined || rating === undefined)
-        return next(new AppError(400, 'Add complete review and rating to update.'));
-    if (reviewId === undefined)
-        return next(new AppError(404, 'No review found.'));
-    if (!validateString(review))
-        return next(new AppError(400, 'Please specify a review.'));
-    if (!validateRating(rating))
-        return next(new AppError(400, 'Rating must be between 1 and 5.'));
+
+    const { reviewId, tourId, review, rating } = req.body;
+    const userId = req.user.id;
+
+    if (reviewId === undefined) return next(new AppError(400, 'Specify review id'));
+    if (reviewId.length !== 24) return next(new AppError(400, 'Invalid Review Id'));
+
+    if (tourId === undefined) return next(new AppError(400, 'Specify tour id'));
+    if (tourId.length !== 24) return next(new AppError(400, 'Invalid Tour Id'));
+
+    if (rating !== undefined && !validateRating(rating)) return next(new AppError(400, 'Invalid rating. Must be a number and between 1 and 5'));
+
+    const reviewFromDB = await Review.findById(reviewId);
+    if (!reviewFromDB) return next(new AppError(400, 'No review found with id "' + reviewId));
+
     const tour = await Tour.findById(tourId);
-    const toBeUpdatedReview = await Review.findById(reviewId);
-    if (!tour)
-        return next(new AppError(404, 'No tour found.'));
-    if (!toBeUpdatedReview)
-        return next(new AppError(404, 'No review found.'));
-    const updatedRating = (tour.rating - review.rating + rating) / tour.reviews.length + 1;
-    const updatedReview = await Review.findByIdAndUpdate(reviewId, { rating, review }, { new: true });
-    await Tour.findByIdAndUpdate(tourId, { rating: updatedRating });
+    if (!tour) return next(new AppError(400, 'No tour found with id "' + tourId));
+
+    console.log({ 'Before Update Number of Reviews Present': tour.reviews.length, 'Before Update Tour Reviews Array': tour.reviews });
+
+    if (reviewFromDB.userId.toString() !== userId) return next(new AppError(403, 'Forbidden. Unauthorized Access.'));
+
+    let updatedTourRating;
+
+    if (rating !== undefined) {
+        const numberOfRatings = tour.reviews.length;
+        updatedTourRating = (((tour.rating * numberOfRatings) - reviewFromDB.rating + rating) / numberOfRatings);
+        updatedTourRating = updatedTourRating.toFixed(2);
+    }
+
+    console.log({ 'After Update Number of Reviews Present': tour.reviews.length, 'After Update Tour Reviews Array': tour.reviews });
+
+    console.log('_________________________________________________________________________');
+
+    await Tour.findByIdAndUpdate(tourId, { rating: updatedTourRating });
+
+    const updatedReview = await Review.findByIdAndUpdate(reviewId, { review, rating }, {new: true});
+
     return res.status(200).json({
         status: 'success',
-        data: {
-            review: updatedReview
-        }
+        review: updatedReview
     });
 });
+
 
 const deleteReview = catchAsync(async (req, res, next) => {
-    const { userId, tourId, reviewId } = req.body;
-    if (userId === undefined || userId !== req.user._id.toString())
-        return next(new AppError(403, 'Forbidden. Unauthorized access'));
-    if (tourId === undefined)
-        return next(new AppError(404, 'No tour found.'));
-    if (reviewId === undefined)
-        return next(new AppError(404, 'No review found.'));
+
+    const { reviewId, tourId } = req.body;
+    const userId = req.user.id;
+
+    if (reviewId === undefined) return next(new AppError(400, 'Specify review id'));
+    if (reviewId.length !== 24) return next(new AppError(400, 'Invalid Review Id'));
+
+    if (tourId === undefined) return next(new AppError(400, 'Specify tour id'));
+    if (tourId.length !== 24) return next(new AppError(400, 'Invalid Tour Id'));
+
+    const reviewFromDB = await Review.findById(reviewId);
+    if (!reviewFromDB) return next(new AppError(400, 'No review found with id "' + reviewId));
+
     const tour = await Tour.findById(tourId);
-    const toBeDeletedReview = await Review.findById(reviewId);
-    const rating = toBeDeletedReview.rating;
-    const reviews = tour.reviews;
-    const updatedReviews = reviews.filter(review => review.id !== reviewId);
-    const updatedRating = ((tour.rating * tour.reviews.length) - rating) / (tour.reviews.length - 1);
-    await Tour.findByIdAndUpdate(tourId, { reviews: updatedReviews, rating: updatedRating });
-    await Review.findByIdAndDelete(reviewId);
-    return res.status(204).json({
-        status: 'success',
-        message: 'Review was successfully deleted'
+    if (!tour) return next(new AppError(400, 'No tour found with id "' + tourId));
+
+    if (reviewFromDB.userId.toString() !== userId) return next(new AppError(403, 'Forbidden. Unauthorized Access.'));
+
+    let updatedTourRating;
+
+    const tourRating = tour.rating;
+    const numberOfRatings = tour.reviews.length;
+
+    if (numberOfRatings === 1) updatedTourRating = 0;
+    else {
+        updatedTourRating = (((tourRating * numberOfRatings) - reviewFromDB.rating) / (numberOfRatings - 1));
+        updatedTourRating = updatedTourRating.toFixed(2);
+    }
+
+    let tourReviews = tour.reviews;
+
+    console.log({ 'Before Delete Number of Reviews Present': tourReviews.length, 'Before Delete Tour Reviews Array': tour.reviews });
+
+    tourReviews = tourReviews.filter(tourReviewId => {
+        console.log({ tourReviewId: tourReviewId.toString(), reviewId });
+        return tourReviewId.toString() !== reviewId;
     });
+
+    console.log({ 'After Delete Number of Reviews Present': tourReviews.length, 'After Delete Tour Reviews Array': tour.reviews });
+
+    console.log('_________________________________________________________________________');
+
+    await Tour.findByIdAndUpdate(tourId, { reviews: tourReviews, rating: updatedTourRating });
+    await Review.findByIdAndDelete(reviewId);
+
+    return res.status(200).json({
+        status: 'success'
+    });
+
 });
 
-module.exports = { getAllReviews, getReview, postReview, updateReview, deleteReview };
+module.exports = { getAllReviews, getReview, postReview, updateReview, deleteReview, getAllReviewsForTour };

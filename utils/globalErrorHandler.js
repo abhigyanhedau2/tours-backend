@@ -39,6 +39,11 @@ const globalErrorHandler = (err, req, res, next) => {
 
     // Else, it means that it is a programmatical error
     else {
+        if (err.statusCode === 400) return res.status(err.statusCode).json({
+            status: err.status,
+            message: "Invalid request sent. Read - " + err.message,
+            error: err
+        });
         console.log(err);
         return res.status(500).json({
             status: 'error',

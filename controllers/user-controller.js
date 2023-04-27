@@ -369,7 +369,7 @@ const getMe = catchAsync(async (req, res, next) => {
 const updateMe = catchAsync(async (req, res, next) => {
 
     const { name, address, number, age } = req.body;
-    const userId = req.user._id;
+    const userId = req.user.id;
 
     // Fetch the user from DB
     const user = await User.findOne({ email: req.user.email });
@@ -414,13 +414,13 @@ const updateMe = catchAsync(async (req, res, next) => {
 
 const deleteMe = catchAsync(async (req, res, next) => {
 
-    const user = req.user;
+    const userId = req.user.id;
 
     if (user.imagePublicId !== null) {
         await cloudinary.uploader.destroy(user.imagePublicId);
     }
 
-    await User.deleteOne({ email: user.email });
+    await User.findByIdAndDelete(userId);
 
     return res.status(204).json({
         status: 'success',

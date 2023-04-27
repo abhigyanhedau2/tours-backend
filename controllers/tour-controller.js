@@ -6,7 +6,6 @@ const cloudinary = require('cloudinary');
 const mongoose = require('mongoose');
 
 const validateString = require('./../utils/validateString');
-const validateRating = require('./../utils/validateRating');
 
 const getAllTours = catchAsync(async (req, res, next) => {
     let allTours = await Tour.find();
@@ -27,7 +26,7 @@ const getAllTours = catchAsync(async (req, res, next) => {
         await Tour.findByIdAndUpdate(tour.id, { dates: updatedTours });
     }
     // Reassign the updated allTours array to the original variable
-    allTours = await Tour.find().populate('guides');
+    allTours = await Tour.find().populate('guides').populate('reviews');
     return res.status(200).json({
         status: 'success',
         results: allTours.length,
@@ -46,6 +45,7 @@ const getTour = catchAsync(async (req, res, next) => {
     const day = String(currentDate.getDate());
     const todayDateString = `${year}-${month}-${day}`;
     let tour = await Tour.findById(tourId);
+    if (!tour) return next(new AppError(404, 'Tour not found'));
     let updatedTours = [];
     updatedTours = tour.dates.filter((date) => {
         const tourYear = date.getFullYear();
@@ -55,9 +55,16 @@ const getTour = catchAsync(async (req, res, next) => {
         return tourDateString >= todayDateString;
     });
     await Tour.findByIdAndUpdate(tour.id, { dates: updatedTours });
-    tour = await Tour.findById(tourId).populate('guides');
+    tour = await Tour.findById(tourId).populate('guides').populate({
+        path: 'reviews',
+        populate: {
+            path: 'userId'
+        }
+    });
     if (!tour)
         return next(new AppError(404, "No tour found"));
+    console.log('Get Tour - ');
+    console.log({ 'Number of Reviews Present': tour.reviews.length, 'Tour Reviews Array': tour.reviews });
     return res.status(200).json({
         status: 'success',
         data: {
@@ -67,7 +74,7 @@ const getTour = catchAsync(async (req, res, next) => {
 });
 
 const postTour = catchAsync(async (req, res, next) => {
-    const { name, description, difficulty, dates, locations, duration, participants, price, rating, guides } = req.body;
+    const { name, description, difficulty, dates, locations, duration, participants, price, guides } = req.body;
     // perform validation
     if (!validateString(name)) return next(new AppError(400, 'Invalid Tour Name'));
     if (!validateString(description)) return next(new AppError(400, 'Invalid Tour description'));
@@ -77,7 +84,6 @@ const postTour = catchAsync(async (req, res, next) => {
     if (!validateString(duration)) return next(new AppError(400, 'Invalid Tour duration'));
     if (!validateString(participants)) return next(new AppError(400, 'Invalid Tour participants'));
     if (!validateString(price)) return next(new AppError(400, 'Invalid Tour price'));
-    if (!validateRating(rating)) return next(new AppError(400, 'Invalid Tour rating'));
     let imageLink = "https://res.cloudinary.com/ds4l1uae7/image/upload/v1681737167/pexels-te-lensfix-1371360_lajqrk.jpg";
     let imagePublicId = null;
     let images = [];
@@ -99,13 +105,13 @@ const postTour = catchAsync(async (req, res, next) => {
         duration,
         participants,
         price,
-        rating,
         guides
     });
+    const tour = await Tour.findById(newTour.id).populate('guides').populate('reviews');
     return res.status(201).json({
         status: 'success',
         data: {
-            tour: newTour
+            tour
         }
     });
 });
@@ -182,11 +188,12 @@ const deleteTour = catchAsync(async (req, res, next) => {
     const { tourId } = req.body;
     if (tourId === undefined || tourId.length !== 24) return next(new AppError(404, 'Tour not found. Specify tour id.'));
     const tour = await Tour.findById(tourId);
+    if (!tour) return next(new AppError(400, 'Tour not found'));
     for (const image of tour.images) {
         await cloudinary.uploader.destroy(image.imagePublicId);
     }
     await Tour.findByIdAndDelete(tourId);
-    return res.status(204).json({
+    return res.status(200).json({
         status: 'success',
         message: 'Tour successfully deleted'
     });
@@ -205,7 +212,7 @@ const addGuideToTour = catchAsync(async (req, res, next) => {
         const guideIdObj = new mongoose.Types.ObjectId(guideId);
         if (!availableGuides.some(objectId => objectId.equals(guideIdObj))) availableGuides.push(guideIdObj);
     }
-    const updatedTour = await Tour.findByIdAndUpdate(tourId, { guides: availableGuides }, { new: true }).populate('guides');
+    const updatedTour = await Tour.findByIdAndUpdate(tourId, { guides: availableGuides }, { new: true }).populate('guides').populate('reviews');
     return res.status(200).json({
         status: 'success',
         data: {
@@ -228,7 +235,7 @@ const removeGuideFromTour = catchAsync(async (req, res, next) => {
         const idx = availableGuides.indexOf(guideIdObj);
         if (idx !== -1) availableGuides.splice(idx, 1);
     }
-    const updatedTour = await Tour.findByIdAndUpdate(tourId, { guides: availableGuides }, { new: true }).populate('guides');
+    const updatedTour = await Tour.findByIdAndUpdate(tourId, { guides: availableGuides }, { new: true }).populate('guides').populate('reviews');
     return res.status(200).json({
         status: 'success',
         data: {
