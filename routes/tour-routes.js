@@ -10,7 +10,7 @@ const router = express.Router();
 const { getAllTours, getTour, postTour, updateTour, deleteTour, addGuideToTour, removeGuideFromTour } = tourControllers;
 
 router.route('/getAllTours').get(getAllTours);
-router.route('/getTour').get(getTour);
+router.route('/getTour').post(getTour);
 
 router.use(protect, restrictTo('guide', 'admin'));
 router.route('/postTour').post(upload.array('images', 5), postTour);
