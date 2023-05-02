@@ -417,7 +417,7 @@ const deleteMe = catchAsync(async (req, res, next) => {
     const userId = req.user.id;
 
     if (user.imagePublicId !== null) {
-        await cloudinary.uploader.destroy(user.imagePublicId);
+        await cloudinary.uploader.destroy(req.user.imagePublicId);
     }
 
     await User.findByIdAndDelete(userId);
