@@ -29,12 +29,17 @@ const bookingSchema = new Schema({
         address: {
             type: String,
             required: true
-        },
+        }
     }],
     bookingDate: {
         type: Date,
         required: true
+    },
+    tourCompleted: {
+        type: Boolean,
+        required: true,
+        default: false
     }
 });
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model('Booking', bookingSchema);
