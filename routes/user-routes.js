@@ -38,8 +38,10 @@ router.route('/allguides').get(getAllGuides);
 
 router.route('/addAdmin').post(upload.single('image'), addAdmin);
 
+router.route('/getAGuide')
+    .post(getAGuide);
+    
 router.route('/guide')
-    .get(getAGuide)
     .post(upload.single('image'), postAGuide)
     .patch(upload.single('image'), updateAGuide)
     .delete(deleteAGuide);
