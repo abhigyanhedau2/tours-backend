@@ -35,14 +35,7 @@ const tourSchema = new Schema({
         default: [],
     },
     locations: {
-        type: [{
-            locationName: {
-                type: String,
-            },
-            locationLink: {
-                type: String,
-            }
-        }],
+        type: [[mongoose.Schema.Types.Mixed]],
         default: [],
     },
     duration: {
