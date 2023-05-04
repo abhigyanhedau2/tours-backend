@@ -38,11 +38,9 @@ const tourSchema = new Schema({
         type: [{
             locationName: {
                 type: String,
-                required: true
             },
             locationLink: {
                 type: String,
-                required: true
             }
         }],
         default: [],
