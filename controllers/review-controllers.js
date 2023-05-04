@@ -57,7 +57,6 @@ const getReview = catchAsync(async (req, res, next) => {
         status: 'success',
         review
     });
-
 });
 
 
