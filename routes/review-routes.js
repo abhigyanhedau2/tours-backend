@@ -8,12 +8,14 @@ const router = express.Router();
 const { getAllReviews, getReview, getAllReviewsForTour, postReview, updateReview, deleteReview } = reviewControllers;
 
 router.route('/getAllReviews').get(getAllReviews);
-router.route('/getAllReviewsForTour').get(getAllReviewsForTour);
+router.route('/getAllReviewsForTour').post(getAllReviewsForTour);
 
 router.use(protect);
 
+router.route('/getReview')
+    .post(getReview);
+
 router.route('/')
-    .get(getReview)
     .post(postReview)
     .patch(updateReview)
     .delete(deleteReview);
