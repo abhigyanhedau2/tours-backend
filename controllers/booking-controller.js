@@ -56,7 +56,7 @@ const bookTour = catchAsync(async (req, res, next) => {
 });
 
 const getAllBookings = catchAsync(async (req, res, next) => {
-    let bookings = await Booking.find();
+    let bookings = await Booking.find().populate('tourId');
     for (const booking of bookings) {
         const completed = bookingIsCompleted(booking);
         if (completed) await Booking.findByIdAndUpdate(booking.id, { tourCompleted: true });
@@ -69,7 +69,7 @@ const getAllBookings = catchAsync(async (req, res, next) => {
 });
 
 const getCompletedBookings = catchAsync(async (req, res, next) => {
-    let bookings = await Booking.find();
+    let bookings = await Booking.find().populate('tourId');
     const completedBookings = [];
     for (const booking of bookings) {
         if (bookingIsCompleted(booking)) {
