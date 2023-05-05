@@ -85,7 +85,7 @@ const getCompletedBookings = catchAsync(async (req, res, next) => {
 });
 
 const getIncompleteBookings = catchAsync(async (req, res, next) => {
-    let bookings = await Booking.find();
+    let bookings = await Booking.find().populate('tourId');
     const inccompleteBookings = [];
     for (const booking of bookings) {
         if (!bookingIsCompleted(booking)) inccompleteBookings.push(booking);
@@ -101,7 +101,7 @@ const getIncompleteBookings = catchAsync(async (req, res, next) => {
 const getAllBookingsForTour = catchAsync(async (req, res, next) => {
     const { tourId } = req.body;
     if (tourId === undefined || tourId.toString().length !== 24) return next(new AppError(400, `No tour found - ${tourId}`));
-    const tourBookings = await Booking.find({ tourId });
+    const tourBookings = await Booking.find({ tourId }).populate('tourId');
     return res.status(200).json({
         status: 'success',
         results: tourBookings.length,
@@ -111,7 +111,7 @@ const getAllBookingsForTour = catchAsync(async (req, res, next) => {
 
 const getMyBookings = catchAsync(async (req, res, next) => {
     const userId = req.user.id;
-    let myBookings = await Booking.find({ userId });
+    let myBookings = await Booking.find({ userId }).populate('tourId');
     if (myBookings === undefined || myBookings.length === 0) return next(new AppError(400, 'No bookings have been made yet.'));
     myBookings = myBookings.filter(async booking => {
         const completed = bookingIsCompleted(booking);
@@ -128,7 +128,7 @@ const getMyBookings = catchAsync(async (req, res, next) => {
 const getBooking = catchAsync(async (req, res, next) => {
     const { bookingId } = req.body;
     if (bookingId === undefined || bookingId.toString().length !== 24) return next(new AppError(400, 'Invalid booking id'));
-    const booking = await Booking.findById(bookingId);
+    const booking = await Booking.findById(bookingId).populate('tourId');
     if (bookingIsCompleted(booking)) await Booking.findByIdAndUpdate(booking.id, { tourCompleted: true });
     if (!booking) return next(new AppError(404, `No booking found for ${bookingId}`));
     return res.status(200).json({
@@ -141,7 +141,7 @@ const cancelBooking = catchAsync(async (req, res, next) => {
     const userId = req.user.id;
     const { bookingId } = req.body;
     if (bookingId === undefined || bookingId.toString().length !== 24) return next(new AppError(400, 'Invalid booking id'));
-    let booking = await Booking.findById(bookingId);
+    let booking = await Booking.findById(bookingId).populate('tourId');
     if (bookingIsCompleted(booking)) booking = await Booking.findByIdAndUpdate(booking.id, { tourCompleted: true }, { new: true });
     if (booking.tourCompleted) return next(new AppError(400, 'Tour is already completed. Cannot cancel the booking now.'));
     const user = await User.findById(userId);
