@@ -143,7 +143,7 @@ const cancelBooking = catchAsync(async (req, res, next) => {
     if (bookingId === undefined || bookingId.toString().length !== 24) return next(new AppError(400, 'Invalid booking id'));
     let booking = await Booking.findById(bookingId).populate('tourId');
     if (bookingIsCompleted(booking)) booking = await Booking.findByIdAndUpdate(booking.id, { tourCompleted: true }, { new: true });
-    if (booking.tourCompleted) return next(new AppError(400, 'Tour is already completed. Cannot cancel the booking now.'));
+    // if (booking.tourCompleted) return next(new AppError(400, 'Tour is already completed. Cannot cancel the booking now.'));
     const user = await User.findById(userId);
     let userTours = user.toursBooked;
     const userIsCorrect = false;
