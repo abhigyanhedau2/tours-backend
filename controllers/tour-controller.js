@@ -14,19 +14,19 @@ const getAllTours = catchAsync(async (req, res, next) => {
     const month = String(currentDate.getMonth() + 1);
     const day = String(currentDate.getDate());
     const todayDateString = `${year}-${month}-${day}`;
-    let updatedTours = [];
-    for (const tour of allTours) {
-        updatedTours = tour.dates.filter((date) => {
-            const tourYear = date.getFullYear();
-            const tourMonth = date.getMonth();
-            const tourDate = date.getDate();
-            const tourDateString = `${tourYear}-${tourMonth}-${tourDate}`;
-            return tourDateString > todayDateString;
-        });
-        await Tour.findByIdAndUpdate(tour.id, { dates: updatedTours });
-    }
-    // Reassign the updated allTours array to the original variable
-    allTours = await Tour.find().populate('guides').populate('reviews');
+    // let updatedTours = [];
+    // for (const tour of allTours) {
+    //     updatedTours = tour.dates.filter((date) => {
+    //         const tourYear = date.getFullYear();
+    //         const tourMonth = date.getMonth();
+    //         const tourDate = date.getDate();
+    //         const tourDateString = `${tourYear}-${tourMonth}-${tourDate}`;
+    //         return tourDateString > todayDateString;
+    //     });
+    //     await Tour.findByIdAndUpdate(tour.id, { dates: updatedTours });
+    // }
+    // // Reassign the updated allTours array to the original variable
+    // allTours = await Tour.find().populate('guides').populate('reviews');
     return res.status(200).json({
         status: 'success',
         results: allTours.length,
@@ -45,26 +45,24 @@ const getTour = catchAsync(async (req, res, next) => {
     const day = String(currentDate.getDate());
     const todayDateString = `${year}-${month}-${day}`;
     let tour = await Tour.findById(tourId);
-    if (!tour) return next(new AppError(404, 'Tour not found'));
-    let updatedTours = [];
-    updatedTours = tour.dates.filter((date) => {
-        const tourYear = date.getFullYear();
-        const tourMonth = date.getMonth();
-        const tourDate = date.getDate();
-        const tourDateString = `${tourYear}-${tourMonth}-${tourDate}`;
-        return tourDateString >= todayDateString;
-    });
-    await Tour.findByIdAndUpdate(tour.id, { dates: updatedTours });
-    tour = await Tour.findById(tourId).populate('guides').populate({
-        path: 'reviews',
-        populate: {
-            path: 'userId'
-        }
-    });
+    // if (!tour) return next(new AppError(404, 'Tour not found'));
+    // let updatedTours = [];
+    // updatedTours = tour.dates.filter((date) => {
+    //     const tourYear = date.getFullYear();
+    //     const tourMonth = date.getMonth();
+    //     const tourDate = date.getDate();
+    //     const tourDateString = `${tourYear}-${tourMonth}-${tourDate}`;
+    //     return tourDateString >= todayDateString;
+    // });
+    // await Tour.findByIdAndUpdate(tour.id, { dates: updatedTours });
+    // tour = await Tour.findById(tourId).populate('guides').populate({
+    //     path: 'reviews',
+    //     populate: {
+    //         path: 'userId'
+    //     }
+    // });
     if (!tour)
         return next(new AppError(404, "No tour found"));
-    console.log('Get Tour - ');
-    console.log({ 'Number of Reviews Present': tour.reviews.length, 'Tour Reviews Array': tour.reviews });
     return res.status(200).json({
         status: 'success',
         data: {
@@ -87,7 +85,6 @@ const postTour = catchAsync(async (req, res, next) => {
     let imageLink = "https://res.cloudinary.com/ds4l1uae7/image/upload/v1681737167/pexels-te-lensfix-1371360_lajqrk.jpg";
     let imagePublicId = null;
     let images = [];
-    console.log(dates);
     if (req.files) {
         for (const file of req.files) {
             const result = await cloudinary.uploader.upload(file.path);

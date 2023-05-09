@@ -16,9 +16,7 @@ const tourSchema = new Schema({
         difficulty: ['easy', 'medium', 'hard']
     },
     dates: {
-        type: [{
-            type: Date
-        }],
+        type: [],
         default: [],
     },
     images: {
