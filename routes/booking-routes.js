@@ -16,7 +16,7 @@ router.route('/getMyBookings').get(getMyBookings);
 router.route('/getBooking').post(getBooking);
 router.route('/cancelBooking').post(cancelBooking);
 
-router.use(restrictTo('guide', 'admin'));
+// router.use(restrictTo('guide', 'admin'));
 
 router.route('/getAllBookings').get(getAllBookings);
 router.route('/getCompletedBookings').get(getCompletedBookings);
