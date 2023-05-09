@@ -146,7 +146,7 @@ const cancelBooking = catchAsync(async (req, res, next) => {
     // if (booking.tourCompleted) return next(new AppError(400, 'Tour is already completed. Cannot cancel the booking now.'));
     const user = await User.findById(userId);
     let userTours = user.toursBooked;
-    const userIsCorrect = false;
+    let userIsCorrect = false;
     for (const userBookingId of userTours) {
         if (bookingId === userBookingId.toString()) {
             userIsCorrect = true;
