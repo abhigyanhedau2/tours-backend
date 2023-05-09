@@ -1,7 +1,6 @@
 name:North India Tour
 description:Best North India Tour you could ever wish for!
 difficulty:easy
-dates:2023-04-25T18:30:00.000Z
 dates:2023-05-26T18:30:00.000Z
 dates:2023-04-25T18:30:00.000Z
 dates:2023-03-24T18:30:00.000Z

@@ -21,25 +21,25 @@ const bookTour = catchAsync(async (req, res, next) => {
     if (participants === undefined || !Array.isArray(participants)) return next(new AppError(400, 'Invalid participants array - should be an array of objects containing name, email, gender, age, phoneNumber and address.'));
     const timestamp = Date.parse(requestedBookingDate);
     const tour = await Tour.findById(tourId);
-    const availableDates = tour.dates;
     if (isNaN(timestamp)) return next(new AppError(400, 'Invalid booking date string'));
-    const requestedDateObj = new Date(requestedBookingDate);
-    const requestedYear = requestedDateObj.getUTCFullYear();
-    const requestedMonth = requestedDateObj.getUTCMonth();
-    const requestedDay = requestedDateObj.getUTCDate();
-    let flag = false;
-    for (const availableDate of availableDates) {
-        const availableYear = availableDate.getUTCFullYear();
-        const availableMonth = availableDate.getUTCMonth();
-        const availableDay = availableDate.getUTCDate();
-        if (availableYear === requestedYear &&
-            availableMonth === requestedMonth &&
-            availableDay === requestedDay) {
-            flag = true;
-            break;
-        }
-    }
-    if (!flag) return next(new AppError(400, 'Invalid tour date. Tour is not conducted on that date.'));
+    // const availableDates = tour.dates;
+    // const requestedDateObj = new Date(requestedBookingDate);
+    // const requestedYear = requestedDateObj.getUTCFullYear();
+    // const requestedMonth = requestedDateObj.getUTCMonth();
+    // const requestedDay = requestedDateObj.getUTCDate();
+    // let flag = false;
+    // for (const availableDate of availableDates) {
+    //     const availableYear = availableDate.getUTCFullYear();
+    //     const availableMonth = availableDate.getUTCMonth();
+    //     const availableDay = availableDate.getUTCDate();
+    //     if (availableYear === requestedYear &&
+    //         availableMonth === requestedMonth &&
+    //         availableDay === requestedDay) {
+    //         flag = true;
+    //         break;
+    //     }
+    // }
+    // if (!flag) return next(new AppError(400, 'Invalid tour date. Tour is not conducted on that date.'));
     const newBooking = await Booking.create({
         userId,
         tourId,
