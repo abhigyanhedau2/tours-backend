@@ -87,6 +87,7 @@ const postTour = catchAsync(async (req, res, next) => {
     let imageLink = "https://res.cloudinary.com/ds4l1uae7/image/upload/v1681737167/pexels-te-lensfix-1371360_lajqrk.jpg";
     let imagePublicId = null;
     let images = [];
+    console.log(dates);
     if (req.files) {
         for (const file of req.files) {
             const result = await cloudinary.uploader.upload(file.path);
